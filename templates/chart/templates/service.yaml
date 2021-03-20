@@ -1,0 +1,21 @@
+{{- if .Values.serviceEnabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include ".name" . }}
+{{- if .Values.service.annotations }}
+{{- with .Values.service.annotations }}
+  annotations:
+{{ toYaml . | indent 4 }}
+{{- end }}
+{{- end }}
+spec:
+  selector:
+    {{- include ".selectorLabels" . | nindent 4 }}
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  ports:
+    {{- range $key, $value := .Values.service.ports }}
+    - name: {{ $key }}
+{{ toYaml $value | indent 6 }}
+    {{- end }}
+{{- end }}

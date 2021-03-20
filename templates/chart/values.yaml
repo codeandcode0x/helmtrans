@@ -1,0 +1,465 @@
+# container count
+containerCount: 1
+
+# container
+containers: {}
+
+# container command
+containerCommand: null
+
+# env
+env: {}
+
+# container ports
+containerPorts: {}
+
+# probe
+livenessProbe: {}
+readinessProbe: {}
+
+# securityContext is a map that specified the privillege and access control settings for a Pod of Container. Security Context
+# can be specified when the application requires additional access control permissions. More details on securityContext and supported
+# settings can be found at https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+# similar to the podSecurityContext {} however, this sets security attributes at the container level rather than at the pod level scope.
+
+#
+# EXAMPLE:
+# 1) To run a container in privilleged mode
+# securityContext:
+#   privilleged: true
+#
+# 2) To run a container as a specific user
+# securityContext:
+#   runAsUser: 2000
+securityContext: {}
+
+# podSecurityContext holds pod-level security access control settings.
+# similar to the securityContext {} however, this sets security attributes at the pod level rather than at the container level scope.
+# this allows certain attributes to be set that are not possible in the container level. For example 'fsGroup'.
+# more details can be found at https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.20/#podsecuritycontext-v1-core
+
+# EXAMPLE:
+# podSecurityContext:
+#   fsGroup: 2000
+podSecurityContext: {}
+
+
+# life cycle
+lifecycle: {}
+
+# shutdownDelay is the number of seconds to delay the shutdown sequence of the Pod by. This is implemented as a sleep
+# call in the preStop hook. By default, this chart includes a preStop hook with a shutdown delay for eventual
+# consistency reasons. You can read more about why you might want to do this in
+# https://blog.gruntwork.io/delaying-shutdown-to-wait-for-pod-deletion-propagation-445f779a8304
+# You can disable this behavior by setting this value to 0.
+shutdownDelay: 5
+
+# sideCarContainers specifies any additional containers that should be deployed as side cars to the main application
+# container. This will be included in the Deployment container spec so that it will be included in the application Pod.
+# This is a nested map, where the first map key is used to name the container, with the nested map being injected as the
+# container spec.
+#
+# The following example specifies a data dog agent container as a side car with some environment variables, binding the
+# name `datadog`:
+#
+# EXAMPLE:
+#
+# sideCarContainers:
+#   datadog:
+#     image: datadog/agent:latest
+#     env:
+#       - name: DD_API_KEY
+#         value: ASDF-1234
+#       - name: SD_BACKEND
+#         value: docker
+sideCarContainers: {}
+
+# canary specifies test pod(s) that are deployed alongside your application's stable track pods.
+# It is useful for testing a new release candidate in a production environment with minimal disruption and
+# for allowing you to find any issues early.
+# The expected keys of the canary spec are:
+#   - enabled        (bool) (required) : Whether or not the canary deployment should be created. If false, no canary deployment will be created.
+#   - containerImage (map)  (required) : A map that specifies the application container and tag to be managed by the canary deployment.
+#                                        This has the same structure as containerImage.
+#   - replicaCount   (int)             : The number of pods that should be managed by the canary deployment. Defaults to 1 if unset.
+#
+# The following example specifies a simple canary deployment:
+#
+# EXAMPLE:
+#
+# canary:
+#   enabled: true
+#   replicaCount: 1
+#   containerImage:
+#     repository: nginx
+#     tag: 1.16.0
+#     pullPolicy: IfNotPresent
+canary: {}
+
+
+replicaCount: 1
+
+
+deploymentAnnotations: {}
+
+
+additionalDeploymentLabels: {}
+
+podAnnotations: {}
+
+# additionalDeploymentLabels will add the provided map to the labels for the Pods created by the deployment resource.
+# this is in addition to the helm template related labels created by the chart
+# The keys and values are free form, but subject to the limitations of Kubernetes labelling.
+# The match labels for the deployment aren't affected by these additional labels
+# NOTE: This variable is injected directly into the deployment spec.
+additionalPodLabels: {}
+
+# minPodsAvailable specifies the minimum number of pods that should be available at any given point in time. This is
+# used to configure a PodDisruptionBudget for the included pod. See
+# https://blog.gruntwork.io/avoiding-outages-in-your-kubernetes-cluster-using-poddisruptionbudgets-ef6a4baa5085
+# for an introduction to PodDisruptionBudgets.
+# NOTE: setting this to 0 will skip creating the PodDisruptionBudget resource.
+minPodsAvailable: 0
+
+
+# service:
+#   enabled: true
+#   ports:
+#     app:
+#       port: 80
+#       targetPort: http
+#       protocol: TCP
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports: {}
+
+# servicemonitor is a map that can be used to configure a Service monitor for the operator. By default, service monitor is off.
+# The expected keys are:
+#   - enabled     (bool)         (required) : Whether or not the Service Monitor resource should be created. If false, no
+#                                             Service Monitor resource will be created.
+#   - namespace   (string)       (required) : Namespace of Endpoints object.
+#   - endpoints   (list[map])    (required) : An object used to discovers targets from listed endpoints of a service.
+#                                             For each endpoint address one target is discovered per port.
+#                                             If the endpoint is backed by a pod, all additional container ports of the pod,
+#                                             not bound to an endpoint port, are discovered as targets as well.
+#
+# The following example specifies a ServiceMonitor rule that describes the set of targets to be monitored by Prometheus.
+# EXAMPLE:
+#
+# serviceMonitor:
+#   enabled: true
+#   namespace: monitoring
+#   endpoints:
+#     default:
+#       interval: 10s
+#       scrapeTimeout: 10s
+#       honorLabels: true
+#       path: /metrics
+#       port: http
+#       scheme: http
+serviceMonitor:
+  enabled: false
+  namespace: monitoring
+  labels: {}
+  endpoints: {}
+
+# ingress is a map that can be used to configure an Ingress resource for this service. By default, turn off ingress.
+# NOTE: if you enable Ingress, then Service must also be enabled.
+# The expected keys are:
+#   - enabled     (bool)         (required) : Whether or not the Ingress resource should be created. If false, no
+#                                             Ingress resource will be created.
+#   - annotations (map)                     : Annotations that should be added to the Service resource. This is injected
+#                                             directly in to the resource yaml.
+#   - tls         (list[map])               : Sets up TLS termination on the ingress rule. Each item is a separate TLS
+#                                             rule that maps to one or more hosts specified in this ingress rule. This
+#                                             is injected directly in to the resource yaml.
+#   - hosts       (list[string])            : Sets up the host routes for the ingress resource. There will be a routing
+#                                             rule for each host defined in this list. If empty, will match all hosts.
+#   - path        (string)       (required) : The url path to match to route to the Service.
+#   - servicePort (int|string)   (required) : The port (as a number) or the name of the port on the Service to route to.
+#   - additionalPaths (list[map])           : Additional paths that should be added to the ingress which will be lower
+#                                             priority than the application service path. Each item corresponds to
+#                                             another path, and should define `path`, `serviceName`, and `servicePort`.
+#   - additionalPathsHigherPriority (list[map])
+#                                           : Additional paths that should be added to the ingress which will be higher
+#                                             priority than the application service path. Each item corresponds to
+#                                             another path, and should define `path`, `serviceName`, and `servicePort`.
+#
+# The following example specifies an Ingress rule that routes chart-example.local/app to the Service port `app` with
+# TLS configured using the certificate key pair in the Secret `chart-example-tls`:
+#
+# EXAMPLE:
+#
+# ingress:
+#   enabled: true
+#   annotations:
+#     kubernetes.io/ingress.class: nginx
+#     kubernetes.io/tls-acme: "true"
+#   path: /app
+#   servicePort: app
+#   hosts:
+#     - chart-example.local
+#   tls:
+#     - secretName: chart-example-tls
+#       hosts:
+#         - chart-example.local
+ingress:
+  enabled: false
+
+# additionalContainerEnv is a list of additional environment variables
+# definitions that will be inserted into the Container's environment YAML.
+#
+# Example:
+# additionalContainerEnv:
+#   - name: DD_AGENT_HOST
+#     valueFrom:
+#       fieldRef:
+#         fieldPath: status.hostIP
+#   - name: DD_ENTITY_ID
+#     valueFrom:
+#       fieldRef:
+#         fieldPath: metadata.uid
+additionalContainerEnv: {}
+
+# configMaps is a map that specifies the ConfigMap resources that should be exposed to the main application container. Each
+# entry in the map represents a ConfigMap resource. The key refers to the name of the ConfigMap that should be exposed,
+# with the value specifying how to expose the ConfigMap. The value is also a map and has the following attributes:
+#   - as (enum[volume,environment,none]) (required)
+#     : ConfigMaps can be exposed to Pods as a volume mount, or as environment variables. This attribute is a string
+#       enum that is expected to be either "volume" or "environment", specifying that the ConfigMap should be exposed as a
+#       mounted volume or via environment variables respectively. This attribute can also be set to "none", which
+#       disables the `ConfigMap` on the container.
+#   - mountPath (string)
+#     : For ConfigMaps mounted as a volume, specify the mount path on the container file system where the config values
+#       will be available.  Required when the ConfigMap is exposed as a volume. Ignored when the ConfigMap is exposed as
+#       environment variables.
+#   - items (map[ConfigMapItem])
+#     : Specify how each ConfigMap value should be made available. The keys are the key of the ConfigMap that you wish
+#       to configure, while the value is another map that controls how that key should be exposed. Required when the
+#       ConfigMap is exposed as environment variables. When the ConfigMap is exposed as a volume, this field is optional.
+#       If empty for volume ConfigMaps, all ConfigMpas will be mounted with the key as the file name relative to the
+#       mountPath. See below for expected attributes.
+# The expected attributes of the `ConfigMapItem` map (the submap within `items`) are:
+#   - filePath   (string) : The file path relative to the ConfigMap mountPath where the value of the ConfigMap keyed at
+#                           the given key of the item should be mounted to in the container. Ignored when the ConfigMap
+#                           is exposed as environment variables.
+#   - fileMode   (string) : The permissions mode of the file when mounted in the container. Ignored when the ConfigMap is
+#                           exposed as environment variables. Expected to be the octal (e.g 777, 644). Defaults to 644.
+#   - envVarName (string) : The name of the environment variable where the value of the ConfigMap keyed at the given key
+#                           of the item should be stored. Ignored when the ConfigMap is exposed as a volume mount.
+#
+# NOTE: These config values are only automatically injected to the main application container. To add them to the side
+# car containers, use the official Kubernetes Pod syntax:
+# https://kubernetes.io/docs/tasks/configure-pod-container/configure-pod-configmap/
+#
+# The following example exposes the ConfigMap `myconfig` as a volume mounted to `/etc/myconfig`, while it exposes the
+# ConfigMap `myotherconfig` as an environment variable.
+#
+# EXAMPLE:
+#
+# configMaps:
+#   myconfig:
+#     as: volume
+#     mountPath: /etc/myconfig
+#   myotherconfig:
+#     as: environment
+#     items:
+#       foo:
+#         envVarName: CONFIG_FOO
+configMaps: {}
+
+# resources
+resources: {}
+
+# persistentVolumes is a map that specifies PeristantVolumes that should be mounted on the pod.  Each entry represents a
+# persistent volume which should already exist within your cluster. They Key is the name of the persistent volume.
+# The value is also a map and has the following attributes:
+#   - mountPath (string) (required)
+#     : The path within the container upon which this volume should be mounted.
+#   - claimName (string) (required)
+#     : The name of the Persistent Volume Claim on which this Persistent Volume in bound.
+#
+# EXAMPLE:
+# persistentVolumes:
+#   example-pv:
+#     mountPath: /mnt/myVol
+#     claimName: example-pv-claim
+#   example-pv-2:
+#     mountPath: /mnt/myOtherVol
+#     claimName: example-pv2-claim
+#
+#
+persistentVolumes: {}
+
+# secrets is a map that specifies the Secret resources that should be exposed to the main application container. Each entry in
+# the map represents a Secret resource. The key refers to the name of the Secret that should be exposed, with the value
+# specifying how to expose the Secret. The value is also a map and has the following attributes:
+#   - as (enum[volume,environment,none]) (required)
+#     : Secrets can be exposed to Pods as a volume mount, or as environment variables. This attribute is a string enum
+#       that is expected to be either "volume" or "environment", specifying that the Secret should be exposed as a mounted
+#       volume or via environment variables respectively. This attribute can also be set to "none", which disables the
+#       `Secret` on the container.
+#   - mountPath (string)
+#     : For Secrets mounted as a volume, specify the mount path on the container file system where the secrets will be
+#       available. Required when the Secret is exposed as a volume. Ignored when the Secret is exposed as environment
+#       variables.
+#   - items (map[SecretItem])
+#     : Specify how each Secret value should be made available. The keys are the key of the Secret that you wish to
+#       configure, while the value is another map that controls how that key should be exposed. Required when the Secret
+#       is exposed as environment variables. When the Secret is exposed as a volume, this field is optional. If empty for
+#       volume Secrets, all Secrets will be mounted with the key as the file name relative to the mountPath. See below
+#       for expected attributes.
+# The expected attributes of the `SecretItem` map (the submap within `items`) are:
+#   - filePath   (string) : The file path relative to the Secret mountPath where the value of the Secret keyed at the
+#                           given key of the item should be mounted to in the container. Ignored when the Secret is
+#                           exposed as environment variables.
+#   - fileMode   (string) : The permissions mode of the file when mounted in the container. Ignored when the Secret is
+#                           exposed as environment variables. Expected to be the octal (e.g 777, 644). Defaults to 644.
+#   - envVarName (string) : The name of the environment variable where the value of the Secret keyed at the given key of
+#                           the item should be stored. Ignored when the Secret is exposed as a volume mount.
+#
+# NOTE: These secrets are only automatically injected to the main application container. To add them to the side car
+# containers, use the official Kubernetes Pod syntax:
+# https://kubernetes.io/docs/concepts/configuration/secret/#using-secrets
+#
+# The following example exposes the Secret `mysecret` as a volume mounted to `/etc/mysecret`, while it exposes the
+# Secret `myothersecret` as an environment variable.
+#
+# EXAMPLE:
+#
+# secrets:
+#   mysecret:
+#     as: volume
+#     mountPath: /etc/mysecret
+#   myothersecret:
+#     as: environment
+#     items:
+#       foo:
+#         envVarName: SECRET_FOO
+secrets: {}
+
+
+# containerResources specifies the amount of resources the application container will require. Only specify if you have
+# specific resource needs.
+# NOTE: This variable is injected directly into the pod spec. See the official documentation for what this might look
+# like: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
+containerResources: {}
+
+# nodeSelector and affinity specify restrictions on what node this pod should be scheduled on.
+# NOTE: These variables are injected directly into the pod spec. See the official documentation for what this might look
+# like: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+nodeSelector: {}
+affinity: {}
+
+# tolerations can be used to allow the pod to be scheduled on nodes with a specific taint.
+# NOTE: This variable is injected directly into the pod spec. See the official documentation for what this might look
+# like: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: []
+
+applicationName: ""
+# image
+image:
+  repository: ""
+  pullPolicy: ""
+  tag: ""
+
+# image pull secret
+imagePullSecrets: []
+
+# serviceAccount is a map that configures the ServiceAccount information for the Pod.
+# The expected keys of serviceAccount are:
+#   - name                         (string) : The name of the ServiceAccount in the Namespace where the Pod is deployed
+#                                             that should be used. By default this is the default ServiceAccount of the
+#                                             Namespace.
+#   - automountServiceAccountToken (bool)   : Whether or not to automatically mount the ServiceAccount token as a volume
+#                                             into the Pod. Note that this can be used to override the equivalent config
+#                                             on the ServiceAccount.
+#   - create                       (bool)   : Whether or not to create a service account with the desired name
+#   - annotations                  (map)    : Annotations will add the provided map to the annotations for the service
+#                                             account created
+#   - labels                       (map)    : Labels will add the provided map to the annotations for the service
+#                                             account created
+#
+# The default config uses empty string to indicate that the default service account should be used and one shouldn't
+# be created
+serviceAccount:
+  name: ""
+  create: false
+  annotations: {}
+  labels: {}
+
+# horizontalPodAutoscaler is a map that configures the Horizontal Pod Autoscaler information for this pod
+# The expected keys of hpa are:
+#   - enabled              (bool) : Whether or not Horizontal Pod Autoscaler should be created, if false the
+#                                             Horizontal Pod Autoscaler will not be created
+#   - minReplicas          (int)  : The minimum amount of replicas allowed
+#   - maxReplicas          (int)  : The maximum amount of replicas allowed
+#   - avgCpuUtilization    (int)  : The target average CPU utilization to be used with the metrics
+#   - avgMemoryUtilization (int)  : The target average Memory utilization to be used with the metrics
+#
+# The default config will not create the Horizontal Pod Autoscaler by setting enabled = false, the default values are
+# set so if enabled is true the horizontalPodAutoscaler has valid values.
+horizontalPodAutoscaler:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+
+#----------------------------------------------------------------------------------------------------------------------
+# AWS SPECIFIC VALUES
+# These input values relate to AWS specific features, such as those relating to EKS and the AWS ALB Ingress Controller.
+#----------------------------------------------------------------------------------------------------------------------
+aws:
+  # irsa can be used to configure the projected tokens used in the IAM Roles for Service Accounts feature. This is
+  # useful if you are manually annotating the projected tokens into your Pods, instead of relying on the mutating
+  # admission hook.
+  #
+  # irsa is a map and expects the following keys:
+  #   - role_arn     (string) (required) : The AWS ARN that the Service Account associated with the Pod should assume.
+  #                                        Note that the projected token will not be mounted and the environment
+  #                                        variables will not be set if this is an empty string (the default).
+  #
+  # Note that you can not use any role with the IRSA feature. It must have the proper assume role IAM policy to allow
+  # the Service Account of the Pod to assume that role. See
+  # https://docs.aws.amazon.com/eks/latest/userguide/create-service-account-iam-policy-and-role.html for more
+  # information.
+  #
+  # EXAMPLE:
+  #
+  # aws:
+  #   irsa:
+  #     role_arn: "arn:aws:iam::123456789012:role/role-for-pod"
+  #
+  irsa:
+    role_arn: ""
+
+
+#----------------------------------------------------------------------------------------------------------------------
+# GOOGLE SPECIFIC VALUES
+# google specifies Google (GKE) specific configuration to be set via arguments/env. variables
+#----------------------------------------------------------------------------------------------------------------------
+google:
+  # managedCertificate can be used to provision a Google Managed Certificate. Associate the ManagedCertificate object
+  # to an Ingress by adding an annotation 'networking.gke.io/managed-certificates' to the Ingress.
+  #
+  # The expected keys are:
+  #   - enabled      (bool)   (required) : Whether or not the ManagedCertificate resource should be created.
+  #   - domainName   (string)            : Specifies the domain that the SSL certificate will be created for
+  #   - name         (string)            : Specifies the name of the SSL certificate that you reference in Ingress with
+  #                                        networking.gke.io/managed-certificates: name
+  #
+  # The following example specifies a ManagedCertificate with a domain name 'api.acme.com' and name 'acme-cert':
+  #
+  # EXAMPLE:
+  #
+  # google:
+  #   managedCertificate:
+  #     enabled: true
+  #     name: acme-cert
+  #     domainName: api.acme.com
+  #
+  # NOTE: if you enable managedCertificate, then Ingress must also be enabled.
+  # Use a Google Managed Certificate. By default, turn off.
+  managedCertificate:
+    enabled: false
