@@ -15,10 +15,10 @@ func init() {
     rootCmd.AddCommand(helmtransYamltoHelmCmd)
 
     helmtransHelmtoYamlCmd.Flags().StringVarP(&filePath, "path", "p", "", "file path")
-    rootCmd.AddCommand(helmtransHelmtoYamlCmd)
+    // rootCmd.AddCommand(helmtransHelmtoYamlCmd)
 
     helmtransCheckCmd.Flags().StringVarP(&filePath, "path", "p", "", "file path")
-    rootCmd.AddCommand(helmtransCheckCmd)
+    // rootCmd.AddCommand(helmtransCheckCmd)
 }
 
 //register deploy command

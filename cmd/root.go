@@ -28,8 +28,7 @@ var rootCmd = &cobra.Command{
 	Use:   "helmtrans [command] [options]",
 	Short: "helmtrans can transform yaml to helm and the other way around",
 	Long: `
-helmtrans is a CLI library for Go that support yaml to helm, 
-also helm to yaml. You can use it as http request to transform.`,
+helmtrans is a CLI library for Go that support yaml to helm.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
