@@ -25,7 +25,7 @@ Flags:
 use yamltohelm command
 
 ```sh
-helmtrans yamltohelm -p [source path] -o [output path]
+➜ helmtrans yamltohelm -p [source path] -o [output path]
 ```
 -o is optional param (default is output)
 
