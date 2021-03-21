@@ -1,6 +1,12 @@
 # helmtrans
 Yaml to helm 
 
+## Install
+
+```sh
+➜ curl -fsSl https://codeandcode.cn/apps/helmtrans/install.sh | bash
+```
+
 ## Usage:
 
 ### Yaml to Helm
