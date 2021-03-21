@@ -3,7 +3,6 @@ package src
 import (
 	"github.com/ghodss/yaml"
 	"k8s.io/client-go/kubernetes"
-	// appsv1 "k8s.io/api/apps/v1"
 	"path/filepath"
 	"encoding/json"
 	"io/ioutil"
@@ -53,20 +52,6 @@ func GetResourceType(bytes []byte) string{
 	var typeIn interface{}
 	json.Unmarshal(typeJson, &typeIn)
 	return typeIn.(map[string]interface{})["kind"].(string)
-}
-
-//get data init file map
-func GetDataInitFile() map[string]string {
-	dataInitFileMap := make(map[string]string, 0)
-	dataBytes := []byte{}
-	dataFilePath := filepath.Join(os.Getenv("HOME"), ".codeci", "data-init-status.json")
-	status := FileExist(dataFilePath)
-	if status {
-		dataBytes = ReadDataFile(dataFilePath)
-	}
-
-	json.Unmarshal(dataBytes, &dataInitFileMap)
-	return dataInitFileMap
 }
 
 //scan data file
@@ -137,10 +122,10 @@ func ScanFile(pathName, sourcePath string) {
 				case "Deployment":
 					spec := apiClient.UnmarshalDeployment(bytes)
 					containerCount := len(spec.Spec.Template.Spec.Containers)
-					// 读取 values yaml
+					// read values yaml
 					t := readYaml(sourcePath+"/values.yaml")
 					appName := spec.Name
-					// 只有一个 container
+					// just one container
 					if containerCount == 1 {
 						annotations := spec.Annotations
 						env := spec.Spec.Template.Spec.Containers[0].Env
@@ -181,7 +166,7 @@ func ScanFile(pathName, sourcePath string) {
 							t["shutdownDelay"] =1
 							t["lifecycle"] = lifecycle
 						}
-					}else { // 多个 container
+					}else { // multi containers
 						t["containers"] = spec.Spec.Template.Spec.Containers
 						t["env"] = make(map[string]interface{}, 0)
 					}
@@ -202,7 +187,6 @@ func ScanFile(pathName, sourcePath string) {
 					// read chart yaml
 					c := readYaml(sourcePath+"/Chart.yaml")
 					c["name"] = appName
-					// c["appVersion"] = imageVersion
 					// write data to file
 					WriteDataFile(JsonToYaml(c), sourcePath+"/Chart.yaml")
 
