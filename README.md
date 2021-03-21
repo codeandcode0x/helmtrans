@@ -1,11 +1,9 @@
 # helmtrans
-yaml to helm 
+Yaml to helm 
 
 ## Usage:
 
 ### Yaml to Helm
-
-help:
 
 ```sh
 ➜ helmtrans  -h
@@ -24,7 +22,7 @@ Flags:
   -h, --help   help for helmtrans
 ```
 
-yaml to helm
+use yamltohelm command
 
 ```sh
 helmtrans yamltohelm -p [source path] -o [output path]
@@ -34,7 +32,7 @@ helmtrans yamltohelm -p [source path] -o [output path]
 
 ### Helm to Yaml
 
-you can use **schelm**[https://github.com/databus23/schelm] to render a helm manifest to a directory.
+you can use [**schelm**](https://github.com/databus23/schelm) to render a helm manifest to a directory.
 
 ## Maintainer
 - roancsu@163.com
